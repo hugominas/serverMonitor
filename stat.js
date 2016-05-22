@@ -4,40 +4,58 @@ const data = require('./controlers/data').data;
 const info = require('./controlers/info').info;
 const readServer = require('./controlers/readServer').server;
 const http = require("http");
-
-
+const secretKey = 'TOKEN'
+const authToken = new RegExp(secretKey);
 // START HTTP server
 var server = http.createServer(function(request, response) {
-  if(/getAcess/.test(request.url)){
-    readServer.getAcess().then((data)=>{
-      response.writeHead(200, {"Content-Type": "text/json"});
-      response.write(data);
-      response.end();
-    }).catch((err)=>{
-      console.log(err)
+
+    //CHECK FOR TOKEN
+    if(authToken.test(request.url)){
+
+      if(/getAcess/.test(request.url)){
+        readServer.getAcess().then((data)=>{
+          response.writeHead(200, { 'Content-Type': 'application/json' });
+          response.write(JSON.stringify(data));
+          response.end();
+        }).catch((err)=>{
+          console.log(err)
+          response.writeHead(200, {"Content-Type": "text/html"});
+          response.write("<!DOCTYPE \"html\">");
+          response.write("<html>");
+          response.write("<head>");
+          response.write("<title>Error</title>");
+          response.write("</head>");
+          response.write("<body>");
+          response.write("Error");
+          response.write("</body>");
+          response.write("</html>");
+          response.end();
+        });
+      }else if(/getOs/.test(request.url)){
+
+      }else if(/getErrors/.test(request.url)){
+        readServer.getErrors().then((data)=>{
+          response.writeHead(200, { 'Content-Type': 'application/json' });
+          response.write(JSON.stringify(data));
+          response.end();
+
+        });
+      }
+
+    }else{
+      console.log('Not Authorized')
       response.writeHead(200, {"Content-Type": "text/html"});
       response.write("<!DOCTYPE \"html\">");
       response.write("<html>");
       response.write("<head>");
-      response.write("<title>Error</title>");
+      response.write("<title>Not Authorized</title>");
       response.write("</head>");
       response.write("<body>");
-      response.write("Error");
+      response.write("Error-Not Authorized");
       response.write("</body>");
       response.write("</html>");
       response.end();
-    });
-  }else if(/getOs/.test(request.url)){
-
-  }else if(/getErrors/.test(request.url)){
-    readServer.getErrors().then((data)=>{
-      console.log(data)
-      response.writeHead(200, {"Content-Type": "text/json"});
-      response.write(data);
-      response.end();
-
-    });
-  }
+    }
 
 });
 

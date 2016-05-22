@@ -18,7 +18,7 @@ readServer.prototype.getErrors = function(){
 
 readServer.prototype.getAcess = function(){
   return new Promise((resolve, reject) => {
-    fs.readFile('/var/log/nginx/access.log', 'utf8', function (err, data) {
+    fs.readFile('/var/log/nginx/access.log', 'utf8',  function (err, data) {
       if(err)reject(err)
       resolve(parser(data));
     })
