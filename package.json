@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "exec": "^0.2.1",
+    "nginx-log-parser": "0.0.4",
     "os-monitor": "^1.0.4",
     "request-headers": "^1.0.0"
   }
