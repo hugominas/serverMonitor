@@ -1,6 +1,8 @@
 'use strict';
 
 const fs = require("fs-extra");
+const rotate = require('log-rotate');
+
 
 
 function appLog(){
@@ -12,14 +14,14 @@ function appLog(){
 
 
 appLog.prototype.getData = function(){
-    this.readLogFile('logs/osLog.json',(data)=>{if(data){this.data.os=data.data||[];}});
-    this.readLogFile('logs/siteLog.json',(data)=>{if(data){this.data.sites=data.data||[];}});
+    this.readLogFile('./logs/osLog.json',(data)=>{if(data){this.data.os=data.data||[];}});
+    this.readLogFile('./logs/siteLog.json',(data)=>{if(data){this.data.sites=data.data||[];}});
 }
 
 appLog.prototype.setData = function(data){
-  if(data.hasOwnProperty('os'))this.data.os.push(data.os)
-  if(data.hasOwnProperty('sites'))this.data.sites.push(data.sites)
-    this.saveLogFile(this.data);
+  if(data.hasOwnProperty('os') && typeof data.os !== 'undefined')this.data.os.push(data.os)
+  if(data.hasOwnProperty('sites') && typeof data.sites !== 'undefined')this.data.sites.push(data.sites)
+    this.saveLogFile();
 }
 
 appLog.prototype.readLogFile = function(file, callback){
@@ -29,10 +31,25 @@ appLog.prototype.readLogFile = function(file, callback){
   }
 
 appLog.prototype.saveLogFile = function(data){
-    fs.writeJson('logs/osLog.json', {data:data.os})
-    fs.writeJson('logs/sitesLog.json', {data:data.sites})
-
+    fs.writeJsonSync('./logs/osLog.json', {data:this.data.os})
+    fs.writeJsonSync('./logs/sitesLog.json', {data:this.data.sites})
+        let dateFirst = new Date(this.data.os[0]['timestamp']*1000);
+        let dateLast = new Date(this.data.os[this.data.os.length-1]['timestamp']*1000);
+        // ROtate logs different days
+        if(dateFirst.getDate()!==dateLast.getDate()){
+          this.rotateLogFile('./logs/osLog.json');
+          this.rotateLogFile('./logs/sitesLog.json');
+        }
   }
+
+appLog.prototype.rotateLogFile = function(path){
+  rotate(path, { count: 3 }, function(err) {
+    // ls ./ => test.log test.log.0 test.log.1
+  });
+  //Clean Data
+  this.data.os=[];
+  this.data.sites=[];
+}
 
 appLog.prototype.createLogFolder = function(){
       let dir = 'logs';

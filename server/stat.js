@@ -32,7 +32,11 @@ var server = http.createServer(function(request, response) {
           response.end();
         });
       }else if(/getOs/.test(request.url)){
-
+        readServer.getOs().then((data)=>{
+          response.writeHead(200, { 'Content-Type': 'application/json' });
+          response.write(JSON.stringify(data));
+          response.end();
+        })
       }else if(/getErrors/.test(request.url)){
         readServer.getErrors().then((data)=>{
           response.writeHead(200, { 'Content-Type': 'application/json' });
@@ -67,7 +71,7 @@ server.listen(8000)
 function appMonitor(){}
 
 appMonitor.prototype.run = function(){
-  info.startMonitor({ delay: 60000 // interval in ms between monitor cycles
+  info.startMonitor({ delay: 5000 // interval in ms between monitor cycles
                 , freemem: 0.1 // freemem under which event 'freemem' is triggered
                 , uptime: 1000000 // number of secs over which event 'uptime' is triggered
                 , critical1: 0.7 // loadavg1 over which event 'loadavg1' is triggered

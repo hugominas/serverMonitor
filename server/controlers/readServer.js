@@ -7,23 +7,65 @@ const fs = require("fs-extra");
 
 function readServer (){}
 
+
+readServer.prototype.getFile = function(path){
+  return new Promise((resolve, reject) => {
+      fs.readFile(path, 'utf8', function (err, data) {
+        if(err)reject(err)
+        resolve(data);
+      })
+  })
+}
+
 readServer.prototype.getErrors = function(){
   return new Promise((resolve, reject) => {
-      fs.readFile('/var/log/nginx/error.log', 'utf8', function (err, data) {
-        if(err)reject(err)
-        resolve(parser(data));
-      })
+    this.getFile('/var/log/nginx/error.log').then((data)=>{
+      resolve(parser(data));
+    }).catch((err)=>{{
+      if(err)reject(err)
+    }})
   })
 }
 
 readServer.prototype.getAcess = function(){
   return new Promise((resolve, reject) => {
-    fs.readFile('/var/log/nginx/access.log', 'utf8',  function (err, data) {
-      if(err)reject(err)
+    this.getFile('/var/log/nginx/access.log').then((data)=>{
       resolve(parser(data));
-    })
+    }).catch((err)=>{{
+      if(err)reject(err)
+    }})
   })
 }
 
+readServer.prototype.getOs = function(){
+  return new Promise((resolve, reject) => {
+    let _this = this,
+        allData = {os:[], sites:[]},
+        allItems = [],
+        allkeys = [];
+
+    fs.walk('./logs/')
+      .on('data', function (item) {
+        if(/osLog/.test(item.path))
+        allItems.push(item.path)
+        allkeys.push('os')
+        if(/sitesLog/.test(item.path))
+        allItems.push(item.path)
+        allkeys.push('sites')
+      })
+      .on('end', function () {
+        Promise.all(allItems.map((e)=>{return _this.getFile(e);}))
+          .then((data)=>{
+            data.forEach((e,i)=>{
+              if(allkeys[i]=='os'){allData.os.push(data[i])}else{allData.sites.push(e)}
+            })
+            resolve(allData);
+          })
+          .catch((err)=>{_this.log(err)});
+      })
+
+
+  })
+}
 
 exports.server = new readServer();
