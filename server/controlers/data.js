@@ -18,6 +18,10 @@ appLog.prototype.getData = function(){
     this.readLogFile('./logs/siteLog.json',(data)=>{if(data){this.data.sites=data.data||[];}});
 }
 
+appLog.prototype.getLastData = function(){
+    return this.data.os[this.data.os.length-1];
+}
+
 appLog.prototype.setData = function(data){
   if(data.hasOwnProperty('os') && typeof data.os !== 'undefined')this.data.os.push(data.os)
   if(data.hasOwnProperty('sites') && typeof data.sites !== 'undefined')this.data.sites.push(data.sites)

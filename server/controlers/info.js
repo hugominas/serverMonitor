@@ -79,6 +79,9 @@ appInfo.prototype.checkDisk = function(){
             var totalUsedPercent = parseFloat(parseFloat(totalUsed / totalSize  * 100).toFixed(2));
             var totalAvailPercent = parseFloat(parseFloat(totalAvail / totalSize  * 100).toFixed(2));
     		usageData.push(['total', totalSize, totalUsed, totalAvail, totalUsedPercent, totalAvailPercent, "-"]);
+
+            if(totalAvailPercent<5)this.notify({type: 'LOW DISK SPACE' })
+
             resolve(usageData);
 
     	});
@@ -135,13 +138,42 @@ appInfo.prototype.getProcesses = function () {
 
 appInfo.prototype.pingMonitor = function(){
       let _this = this;
-      requestHeaders('http://hugomineiro.com', function(err, statusCode, headers) {
-        _this.log('Content type: ' + headers);
-      });
+      //requestHeaders('http://hugomineiro.com', function(err, statusCode, headers) {
+      //  _this.log('Content type: ' + headers);
+      //});
     }
 
 appInfo.prototype.log = function(msg){
   if(this.debug)console.log(msg);
+}
+
+appInfo.prototype.notify = function(msg){
+let       nodemailer = require('nodemailer'),
+          ses = require('nodemailer-ses-transport'),
+          transporter = nodemailer.createTransport(ses({
+              region: 'eu-west-1',
+              accessKeyId: '',
+              secretAccessKey: ''
+          })),
+          data = JSON.stringify(dataCont.getLastData(), null,3),
+          emailHtml = 'The server is reaching its allocated capacity of '+msg.type+'<br> -------------------- <br>'+ data,
+          subject = 'Server Notification -'+ msg.type,
+          emailTo = 'hugo.rodrigues@hiperformancesales.com';
+
+
+      transporter.sendMail ({
+          from: 'noreply@liveperformancesales.com',
+          to: emailTo,
+          subject: subject,
+          html: emailHtml
+      }, function(err, info){
+              if(err) {
+                  this.log({
+                      status: 'nok',
+                      error: err
+                  });
+              }
+      });
 }
 
 appInfo.prototype.events = function(){
@@ -164,11 +196,13 @@ appInfo.prototype.events = function(){
 
   // define handler for a too high 1-minute load average
   monitor.on('loadavg1', function(event) {
+    _this.notify({type: event.type })
     _this.log(event.type, ' Load average is exceptionally high!');
   });
 
   // define handler for a too low free memory
   monitor.on('freemem', function(event) {
+    _this.notify({type: event.type })
     _this.log(event.type, 'Free memory is very low!');
   });
 }

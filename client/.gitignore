@@ -1,2 +1,7 @@
-node_modules
-logs
+.DS_Store
+dist/
+node_modules/
+compile/
+app/css/*
+app/js/*
+npm-debug.log
